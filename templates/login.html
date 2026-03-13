@@ -1,0 +1,31 @@
+{% if error %}
+<p style="color:red;text-align:center;">{{ error }}</p>
+{% endif %}
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<title>Вход</title>
+<style>
+body { font-family: Arial, sans-serif; background: #f4f6f8; margin: 0; padding: 0; }
+.container { max-width: 400px; margin: 80px auto; background: white; padding: 30px; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.08); }
+h1 { text-align: center; color: #2c3e50; margin-bottom: 20px; }
+form { display: flex; flex-direction: column; gap: 15px; }
+input { padding: 10px 12px; border-radius: 6px; border: 1px solid #ccc; font-size: 16px; }
+button { padding: 10px 12px; border-radius: 6px; border: none; background: #3498db; color: white; font-size: 16px; cursor: pointer; transition:0.2s; }
+button:hover { background: #2980b9; }
+a { text-align: center; margin-top: 10px; display: block; text-decoration: none; color: #3498db; }
+</style>
+</head>
+<body>
+<div class="container">
+<h1>Вход</h1>
+<form method="post">
+    <input name="email" type="email" placeholder="Email" required>
+    <input name="password" type="password" placeholder="Пароль" required>
+    <button>Войти</button>
+</form>
+<a href="/register">Нет аккаунта? Зарегистрироваться</a>
+</div>
+</body>
+</html>

@@ -1,0 +1,80 @@
+
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+<title>Редактировать привычку</title>
+<style>
+body { font-family: Arial, sans-serif; background: #f4f6f8; margin: 0; padding: 0; }
+.container { max-width: 600px; margin: 50px auto; background: white; padding: 30px; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.08); }
+h1 { text-align: center; color: #2c3e50; margin-bottom: 20px; }
+
+form { display: flex; flex-direction: column; gap: 15px; }
+input, button { padding: 10px 12px; border-radius: 6px; border: 1px solid #ccc; font-size: 16px; }
+button { background: #3498db; color: white; border: none; cursor: pointer; font-size: 16px; }
+button:hover { background: #2980b9; }
+
+.icon-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 5px;
+    margin-bottom: 15px;
+}
+.icon-label { text-align: center; cursor: pointer; }
+.icon-item {
+    font-size: 32px;
+    border: 2px solid #ccc;
+    border-radius: 8px;
+    padding: 4px;
+    transition: 0.2s;
+}
+.icon-item:hover { border-color: #3498db; }
+.icon-item.selected { border-color: #2980b9; background: #ecf0f1; }
+
+a { text-decoration: none; color: #3498db; text-align: center; display: block; margin-top: 10px; }
+</style>
+
+<script>
+function selectIcon(el) {
+    let siblings = el.closest('.icon-grid').querySelectorAll('.icon-item');
+    siblings.forEach(s => s.classList.remove('selected'));
+    el.classList.add('selected');
+    el.previousElementSibling.checked = true;
+}
+window.onload = function() {
+    // Подсветка иконки, которая уже выбрана при загрузке
+    document.querySelectorAll('.icon-item').forEach(function(icon){
+        if(icon.previousElementSibling.checked) {
+            icon.classList.add('selected');
+        }
+    });
+};
+</script>
+</head>
+<body>
+<div class="container">
+<h1>Редактировать привычку</h1>
+<form method="post">
+    <input name="name" value="{{ habit[2] }}" placeholder="Название" required>
+    <input name="tag" value="{{ habit[3] }}" placeholder="Тег">
+    <input name="target_days" type="number" value="{{ habit[4] }}" min="1" placeholder="Количество отметок">
+    <input name="interval_days" type="number" value="{{ habit[5] }}" min="1" placeholder="Шаг в днях">
+
+    <label>Выберите иконку:</label>
+    <div class="icon-grid">
+    {% for ic in icons %}
+        <label class="icon-label">
+            <input type="radio" name="icon" value="{{ ic }}" {% if ic == habit_icon %}checked{% endif %} style="display:none;">
+            <span class="material-icons icon-item" onclick="selectIcon(this)">{{ ic }}</span>
+        </label>
+    {% endfor %}
+    </div>
+
+    <button>Сохранить</button>
+</form>
+<a href="/">Назад</a>
+</div>
+</body>
+</html>
