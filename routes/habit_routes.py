@@ -3,6 +3,7 @@ from db import get_db
 from models.habit import Habit
 from services.habit_service import HabitService
 from services.mini_goal_service import MiniGoalService
+from flask import session, redirect, url_for, render_template
 
 
 habits = Blueprint("habits", __name__)
@@ -17,6 +18,23 @@ ICON_LIST = [
     "nature_people", "emoji_food_beverage"
 ]
 
+@habits.route("/admin")
+def admin_panel():
+    if "user_id" not in session:
+        return redirect(url_for("auth.login"))
+
+    db = get_db()
+    cursor = db.cursor(dictionary=True)
+    cursor.execute("SELECT role FROM users WHERE id=%s", (session["user_id"],))
+    user = cursor.fetchone()
+    cursor.close()
+    db.close()
+
+    if not user or user["role"] != "admin":
+        return "Доступ запрещён", 403  # или редирект на главную
+
+    # Здесь логика панели администратора
+    return render_template("admin_panel.html")
 
 # ------------------ Главная ------------------
 

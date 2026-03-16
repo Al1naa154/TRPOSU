@@ -6,6 +6,8 @@
 <title>Трекер привычек</title>
 <style>
 
+
+
 .day-grid {
     display: grid;
     grid-template-columns: repeat(30, 16px);
@@ -83,7 +85,16 @@ progress { width: 100%; height: 16px; }
 <body>
 <div class="container">
 <h1>Трекер привычек</h1>
+{% if session.role == "admin" and session.view_user %}
+<div style="background:#fff3cd;padding:10px;border-radius:6px;margin-bottom:15px;">
+Вы просматриваете аккаунт пользователя.
+<a href="/admin/exit_view">Вернуться в админку</a>
+</div>
+{% endif %}
 <a class="logout" href="/logout">Выйти</a>
+{% if session.role == "admin" %}
+<a href="/admin/users" style="margin-left:20px;">Админ панель</a>
+{% endif %}
 
 <h2>Добавить привычку</h2>
 <form method="post" action="/add">
@@ -182,9 +193,11 @@ function selectIcon(el) {
         <button>+</button>
     </form>
 </div>
-        <a class="done" href="/log/{{ h[0] }}">✔ Выполнено сегодня</a>
-        <a class="edit" href="/edit/{{ h[0] }}">✏ Редактировать</a>
-        <a class="delete" href="/delete/{{ h[0] }}">🗑 Удалить</a>
+{% if not session.view_user %}
+<a class="done" href="/log/{{ h[0] }}">✔ Выполнено сегодня</a>
+<a class="edit" href="/edit/{{ h[0] }}">✏ Редактировать</a>
+<a class="delete" href="/delete/{{ h[0] }}">🗑 Удалить</a>
+{% endif %}
     </div>
 </li>
 {% endfor %}

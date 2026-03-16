@@ -49,17 +49,23 @@ def login():
 
         db = get_db()
         cursor = db.cursor()
+
         cursor.execute(
-            "SELECT id, password FROM users WHERE email = %s",
+            "SELECT id, password, role FROM users WHERE email = %s",
             (email,)
         )
+
         user = cursor.fetchone()
+
         cursor.close()
         db.close()
 
         if user and check_password_hash(user[1], password):
             session["user_id"] = user[0]
+            session["role"] = user[2]
+
             return redirect(url_for("habits.index"))
+
         else:
             return render_template(
                 "login.html",
@@ -74,4 +80,5 @@ def login():
 @auth.route("/logout")
 def logout():
     session.pop("user_id", None)
+    session.pop("role", None)
     return redirect(url_for("auth.login"))

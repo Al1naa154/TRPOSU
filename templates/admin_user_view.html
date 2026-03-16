@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<title>{{ user.email }}</title>
+</head>
+<body>
+<h1>Пользователь: {{ user.email }} ({{ user.role }})</h1>
+<a href="{{ url_for('admin.users_list') }}">← Назад к списку пользователей</a>
+
+<h2>Привычки</h2>
+<ul>
+    {% for h in habits %}
+    <li>
+        {{ h.name }} ({{ h.tag }})
+        <ul>
+            {% for g in mini_goals.get(h.id, []) %}
+            <li>{{ g.title }} - {% if g.is_done %}✔{% else %}✖{% endif %}</li>
+            {% endfor %}
+        </ul>
+    </li>
+    {% endfor %}
+</ul>
+</body>
+</html>
