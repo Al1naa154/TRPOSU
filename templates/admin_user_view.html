@@ -1,25 +1,34 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="ru">
 <head>
-<meta charset="UTF-8">
-<title>{{ user.email }}</title>
+    <meta charset="UTF-8">
+    <title>{{ user.email }}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
-<h1>Пользователь: {{ user.email }} ({{ user.role }})</h1>
-<a href="{{ url_for('admin.users_list') }}">← Назад к списку пользователей</a>
+<div class="container">
+    <h1>Пользователь: {{ user.email }} ({{ user.role }})</h1>
+    <a href="{{ url_for('admin.users_list') }}"><button>← Назад к списку пользователей</button></a>
 
-<h2>Привычки</h2>
-<ul>
-    {% for h in habits %}
-    <li>
-        {{ h.name }} ({{ h.tag }})
+    <h2>Привычки</h2>
+    {% if habits %}
         <ul>
-            {% for g in mini_goals.get(h.id, []) %}
-            <li>{{ g.title }} - {% if g.is_done %}✔{% else %}✖{% endif %}</li>
-            {% endfor %}
+        {% for h in habits %}
+            <li>
+                <strong>{{ h.name }}</strong> ({{ h.tag }})
+                {% if mini_goals.get(h.id) %}
+                    <ul>
+                    {% for g in mini_goals[h.id] %}
+                        <li>{{ g.title }} - {% if g.is_done %}✔{% else %}✖{% endif %}</li>
+                    {% endfor %}
+                    </ul>
+                {% endif %}
+            </li>
+        {% endfor %}
         </ul>
-    </li>
-    {% endfor %}
-</ul>
+    {% else %}
+        <p>Нет привычек</p>
+    {% endif %}
+</div>
 </body>
 </html>

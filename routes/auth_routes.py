@@ -1,11 +1,8 @@
 from flask import Blueprint, render_template, request, redirect, url_for, session
-from werkzeug.security import generate_password_hash, check_password_hash
 from db import get_db
+from werkzeug.security import generate_password_hash, check_password_hash
 
 auth = Blueprint("auth", __name__)
-
-
-# ------------------ Регистрация ------------------
 
 @auth.route("/register", methods=["GET", "POST"])
 def register():
@@ -15,31 +12,15 @@ def register():
 
         db = get_db()
         cursor = db.cursor()
-
-        try:
-            cursor.execute(
-                "INSERT INTO users (email, password) VALUES (%s, %s)",
-                (email, password)
-            )
-            db.commit()
-        except:
-            db.rollback()
-            cursor.close()
-            db.close()
-            return render_template(
-                "register.html",
-                error="Пользователь с таким email уже существует"
-            )
-
+        cursor.execute(
+            "INSERT INTO users (email, password, role) VALUES (%s, %s, %s)",
+            (email, password, "user")
+        )
+        db.commit()
         cursor.close()
         db.close()
-
         return redirect(url_for("auth.login"))
-
     return render_template("register.html")
-
-
-# ------------------ Логин ------------------
 
 @auth.route("/login", methods=["GET", "POST"])
 def login():
@@ -49,36 +30,31 @@ def login():
 
         db = get_db()
         cursor = db.cursor()
-
-        cursor.execute(
-            "SELECT id, password, role FROM users WHERE email = %s",
-            (email,)
-        )
-
+        cursor.execute("SELECT id, password FROM users WHERE email=%s", (email,))
         user = cursor.fetchone()
-
         cursor.close()
         db.close()
 
         if user and check_password_hash(user[1], password):
             session["user_id"] = user[0]
-            session["role"] = user[2]
 
-            return redirect(url_for("habits.index"))
+            # Проверка роли
+            db = get_db()
+            cursor = db.cursor()
+            cursor.execute("SELECT role FROM users WHERE id=%s", (user[0],))
+            role = cursor.fetchone()[0]
+            cursor.close()
+            db.close()
 
-        else:
-            return render_template(
-                "login.html",
-                error="Неверный email или пароль"
-            )
+            if role == "admin":
+                return redirect(url_for("admin.admin_panel"))
+            else:
+                return redirect(url_for("habits.index"))
 
+        return "Неверный email или пароль"
     return render_template("login.html")
-
-
-# ------------------ Выход ------------------
 
 @auth.route("/logout")
 def logout():
-    session.pop("user_id", None)
-    session.pop("role", None)
+    session.clear()
     return redirect(url_for("auth.login"))

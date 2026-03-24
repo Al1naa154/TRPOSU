@@ -1,19 +1,38 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="ru">
 <head>
-<meta charset="UTF-8">
-<title>Список пользователей</title>
+    <meta charset="UTF-8">
+    <title>Список пользователей</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
-<h1>Список пользователей</h1>
-<a href="/">Главная</a>
-<ul>
-    {% for u in users %}
-    <li>
-        {{ u[1] }} ({{ u[2] }}) - 
-        <a href="{{ url_for('admin.view_user', user_id=u[0]) }}">Просмотреть</a>
-    </li>
-    {% endfor %}
-</ul>
+<div class="container">
+    <h1>Список пользователей</h1>
+
+    <table>
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Email</th>
+                <th>Роль</th>
+                <th>Действие</th>
+            </tr>
+        </thead>
+        <tbody>
+        {% for user in users %}
+            <tr>
+                <td>{{ user[0] }}</td>
+                <td>{{ user[1] }}</td>
+                <td>{{ user[2] }}</td>
+                <td><a href="{{ url_for('admin.view_user', user_id=user[0]) }}">Просмотреть</a></td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+
+    <div style="margin-top:20px;">
+        <a href="{{ url_for('admin.admin_panel') }}"><button>← Назад</button></a>
+    </div>
+</div>
 </body>
 </html>
