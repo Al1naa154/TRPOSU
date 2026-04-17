@@ -4,31 +4,96 @@
     <meta charset="UTF-8">
     <title>{{ user.email }}</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+
+    <style>
+        .habit-box {
+            margin-bottom: 20px;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 10px;
+            background: #fafafa;
+        }
+
+        .logs {
+            margin-top: 10px;
+            padding-left: 15px;
+        }
+
+        .logs li {
+            font-size: 14px;
+        }
+
+        .tag {
+            color: #888;
+        }
+    </style>
 </head>
 <body>
+
 <div class="container">
+
     <h1>Пользователь: {{ user.email }} ({{ user.role }})</h1>
-    <a href="{{ url_for('admin.users_list') }}"><button>← Назад к списку пользователей</button></a>
+
+    <a href="{{ url_for('admin.users_list') }}">
+        ← Назад к списку пользователей
+    </a>
 
     <h2>Привычки</h2>
+
     {% if habits %}
-        <ul>
         {% for h in habits %}
-            <li>
-                <strong>{{ h.name }}</strong> ({{ h.tag }})
-                {% if mini_goals.get(h.id) %}
-                    <ul>
-                    {% for g in mini_goals[h.id] %}
-                        <li>{{ g.title }} - {% if g.is_done %}✔{% else %}✖{% endif %}</li>
-                    {% endfor %}
-                    </ul>
-                {% endif %}
-            </li>
+            <div class="habit-box">
+
+                <strong>{{ h.name }}</strong>
+                <span class="tag">({{ h.tag }})</span>
+
+                <div>
+                    <b>Цель:</b> {{ h.target_days }} дней |
+                    <b>Интервал:</b> {{ h.interval_days }}
+                </div>
+
+                <div style="margin-top:10px;">
+                    <b>Отметки выполнения:</b>
+
+                    {% if logs_map.get(h.id) %}
+                        <ul class="logs">
+                            {% for d in logs_map[h.id] %}
+                                <li>✔ {{ d }}</li>
+                            {% endfor %}
+                        </ul>
+                    {% else %}
+                        <p>Нет отметок</p>
+                    {% endif %}
+                </div>
+
+                <div style="margin-top:10px;">
+                    <b>Мини-цели:</b>
+
+                    {% if mini_goals.get(h.id) %}
+                        <ul>
+                            {% for g in mini_goals[h.id] %}
+                                <li>
+                                    {{ g.title }} - 
+                                    {% if g.is_done %}
+                                        ✔
+                                    {% else %}
+                                        ✖
+                                    {% endif %}
+                                </li>
+                            {% endfor %}
+                        </ul>
+                    {% else %}
+                        <p>Нет мини-целей</p>
+                    {% endif %}
+                </div>
+
+            </div>
         {% endfor %}
-        </ul>
     {% else %}
         <p>Нет привычек</p>
     {% endif %}
+
 </div>
+
 </body>
 </html>

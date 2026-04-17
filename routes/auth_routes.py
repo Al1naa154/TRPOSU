@@ -19,8 +19,11 @@ def register():
         db.commit()
         cursor.close()
         db.close()
+
         return redirect(url_for("auth.login"))
+
     return render_template("register.html")
+
 
 @auth.route("/login", methods=["GET", "POST"])
 def login():
@@ -30,29 +33,23 @@ def login():
 
         db = get_db()
         cursor = db.cursor()
-        cursor.execute("SELECT id, password FROM users WHERE email=%s", (email,))
+        cursor.execute("SELECT id, password, role FROM users WHERE email=%s", (email,))
         user = cursor.fetchone()
         cursor.close()
         db.close()
 
         if user and check_password_hash(user[1], password):
+            # ✅ сохраняем в сессию
             session["user_id"] = user[0]
+            session["role"] = user[2]   # 🔥 ВАЖНО
 
-            # Проверка роли
-            db = get_db()
-            cursor = db.cursor()
-            cursor.execute("SELECT role FROM users WHERE id=%s", (user[0],))
-            role = cursor.fetchone()[0]
-            cursor.close()
-            db.close()
-
-            if role == "admin":
-                return redirect(url_for("admin.admin_panel"))
-            else:
-                return redirect(url_for("habits.index"))
+            # 👉 ВСЕГДА отправляем на главную
+            return redirect(url_for("habits.index"))
 
         return "Неверный email или пароль"
+
     return render_template("login.html")
+
 
 @auth.route("/logout")
 def logout():

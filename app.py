@@ -9,6 +9,8 @@ from routes.admin_routes import admin_bp   # ⚠ Импортируем admin_bp
 app = Flask(__name__)
 app.secret_key = SECRET_KEY
 
+print("APP LOADED")
+
 # Регистрируем blueprint'ы
 app.register_blueprint(auth)
 app.register_blueprint(habits)
