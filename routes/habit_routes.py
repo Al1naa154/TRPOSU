@@ -10,7 +10,7 @@ habits = Blueprint("habits", __name__)
 
 
 # =========================
-# 📌 ГЛАВНАЯ СТРАНИЦА
+# 📌 ГЛАВНАЯ + ФИЛЬТР ПО ТЕГАМ
 # =========================
 @habits.route("/")
 def index():
@@ -19,8 +19,18 @@ def index():
 
     user_id = session["user_id"]
 
+    # 🔥 фильтр по тегу
+    selected_tag = request.args.get("tag")
+
     habits_list = HabitService.get_all(user_id)
     icons = IconService.get_all()
+
+    # фильтрация
+    if selected_tag:
+        habits_list = [
+            h for h in habits_list
+            if h["tag"] == selected_tag
+        ]
 
     streaks = {
         h["id"]: HabitService.calculate_streak(h["id"])
@@ -37,13 +47,20 @@ def index():
         for h in habits_list
     }
 
+    # список тегов
+    all_tags = sorted(
+        set(h["tag"] for h in HabitService.get_all(user_id) if h["tag"])
+    )
+
     return render_template(
         "index.html",
         active_habits=habits_list,
         streaks=streaks,
         icons=icons,
         day_map=day_map,
-        mini_goals=mini_goals
+        mini_goals=mini_goals,
+        all_tags=all_tags,
+        selected_tag=selected_tag
     )
 
 
@@ -113,7 +130,7 @@ def edit(habit_id):
 
         return render_template("edit_habit.html", habit=habit, icons=icons)
 
-    # POST — сохранить изменения
+    # POST — сохранить
     name = request.form["name"]
     tag = request.form.get("tag", "")
     target_days = request.form.get("target_days", 30)
@@ -140,7 +157,6 @@ def edit(habit_id):
 # =========================
 # 🔥 MINI GOALS
 # =========================
-
 @habits.route("/mini_goal/add/<int:habit_id>", methods=["POST"])
 def add_mini_goal(habit_id):
     if "user_id" not in session:

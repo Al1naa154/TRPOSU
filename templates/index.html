@@ -144,11 +144,36 @@ progress {
 }
 
 .mini-goals li {
-    padding: 5px;
-    margin: 3px 0;
-    background: #fff;
+    background: white;
     border: 1px solid #eee;
     border-radius: 6px;
+    padding: 6px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+/* текст выполненных */
+.done-text {
+    text-decoration: line-through;
+    color: #888;
+}
+
+/* фильтр */
+.tag-filter {
+    margin-bottom: 20px;
+    text-align: center;
+}
+
+.tag-filter a {
+    margin: 0 5px;
+    text-decoration: none;
+    color: #3498db;
+}
+
+.tag-filter a.active {
+    font-weight: bold;
+    color: #2c3e50;
 }
 </style>
 
@@ -177,6 +202,30 @@ function selectIcon(el) {
     <a href="/admin/users">Админ панель</a>
 {% endif %}
 
+<!-- =========================
+     🔥 ФИЛЬТР ПО ТЕГАМ
+========================= -->
+<div class="tag-filter">
+
+    <b>Фильтр:</b>
+
+    <a href="/" class="{% if not selected_tag %}active{% endif %}">
+        Все
+    </a>
+
+    {% for t in all_tags %}
+        <a href="/?tag={{ t }}"
+           class="{% if selected_tag == t %}active{% endif %}">
+            {{ t }}
+        </a>
+    {% endfor %}
+
+</div>
+
+
+<!-- =========================
+     ➕ ДОБАВЛЕНИЕ ПРИВЫЧКИ
+========================= -->
 <h2>Добавить привычку</h2>
 
 <form method="post" action="/add">
@@ -200,6 +249,10 @@ function selectIcon(el) {
     <button>Добавить</button>
 </form>
 
+
+<!-- =========================
+     📌 СПИСОК ПРИВЫЧЕК
+========================= -->
 <h2>Активные привычки</h2>
 
 <ul>
@@ -207,7 +260,7 @@ function selectIcon(el) {
 {% for h in active_habits %}
 <li>
 
-    <!-- ИКОНКА + НАЗВАНИЕ -->
+    <!-- название -->
     <div>
         {% if h.file_path %}
             <img src="{{ url_for('static', filename=h.file_path) }}" width="22">
@@ -218,72 +271,76 @@ function selectIcon(el) {
         <b>{{ h.name }}</b> ({{ h.tag }})
     </div>
 
-    <!-- ПРОГРЕСС -->
+    <!-- прогресс -->
     <div class="progress-row">
         {{ streaks[h.id] }} / {{ h.target_days }}
         <progress value="{{ streaks[h.id] }}" max="{{ h.target_days }}"></progress>
     </div>
 
-    <!-- ДНИ -->
+    <!-- календарь -->
     <div class="day-grid">
         {% for d in day_map[h.id] %}
             <div class="day {{ d.status }}" title="{{ d.date }}"></div>
         {% endfor %}
     </div>
 
-    <!-- ДЕЙСТВИЯ -->
+    <!-- действия -->
     <div class="actions">
         <a class="done" href="/log/{{ h.id }}">✔</a>
         <a class="edit" href="/edit/{{ h.id }}">✏</a>
         <a class="delete" href="/delete/{{ h.id }}">🗑</a>
     </div>
 
-    <!-- 🔥 МИНИ-ЦЕЛИ -->
+
+    <!-- =========================
+         🔥 МИНИ-ЦЕЛИ
+    ========================= -->
     <div class="mini-goals">
 
-    <b>Мини-цели:</b>
+        <b>Мини-цели:</b>
 
-    <!-- добавить -->
-    <form method="post" action="/mini_goal/add/{{ h.id }}">
-        <input name="title" placeholder="Новая мини-цель">
-        <button>Добавить</button>
-    </form>
+        <form method="post" action="/mini_goal/add/{{ h.id }}">
+            <input name="title" placeholder="Новая мини-цель">
+            <button>+</button>
+        </form>
 
-    {% if mini_goals.get(h.id) %}
-        <ul>
+        {% if mini_goals.get(h.id) %}
+            <ul>
 
-        {% for g in mini_goals[h.id] %}
-            <li style="display:flex; justify-content:space-between; align-items:center;">
+            {% for g in mini_goals[h.id] %}
+                <li>
 
-                <!-- ЧЕКБОКС -->
-                <div>
-                    <form method="get" action="/mini_goal/toggle/{{ g.id }}" style="display:inline;">
-                        <input type="checkbox"
-                               onchange="this.form.submit()"
-                               {% if g.is_done %}checked{% endif %}>
-                    </form>
+                    <div>
+                        {% if g.is_done %}
+                            <span class="done-text">{{ g.title }}</span>
+                        {% else %}
+                            {{ g.title }}
+                        {% endif %}
+                    </div>
 
-                    <span style="{% if g.is_done %}text-decoration: line-through; color: #888;{% endif %}">
-                        {{ g.title }}
-                    </span>
-                </div>
+                    <div>
+                        <form method="get" action="/mini_goal/toggle/{{ g.id }}" style="display:inline;">
+                            <input type="checkbox"
+                                   onchange="this.form.submit()"
+                                   {% if g.is_done %}checked{% endif %}>
+                        </form>
 
-                <!-- УДАЛЕНИЕ -->
-                <a href="/mini_goal/delete/{{ g.id }}"
-                   onclick="return confirm('Удалить мини-цель?')"
-                   style="color:red; text-decoration:none;">
-                    🗑
-                </a>
+                        <a href="/mini_goal/delete/{{ g.id }}"
+                           onclick="return confirm('Удалить?')"
+                           style="color:red;text-decoration:none;">
+                            🗑
+                        </a>
+                    </div>
 
-            </li>
-        {% endfor %}
+                </li>
+            {% endfor %}
 
-        </ul>
-    {% else %}
-        <p>Нет мини-целей</p>
-    {% endif %}
+            </ul>
+        {% else %}
+            <p>Нет мини-целей</p>
+        {% endif %}
 
-</div>
+    </div>
 
 </li>
 {% endfor %}

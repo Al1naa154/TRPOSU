@@ -39,11 +39,10 @@ def login():
         db.close()
 
         if user and check_password_hash(user[1], password):
-            # ✅ сохраняем в сессию
-            session["user_id"] = user[0]
-            session["role"] = user[2]   # 🔥 ВАЖНО
 
-            # 👉 ВСЕГДА отправляем на главную
+            session["user_id"] = user[0]
+            session["role"] = user[2]   
+
             return redirect(url_for("habits.index"))
 
         return "Неверный email или пароль"

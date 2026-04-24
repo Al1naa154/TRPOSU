@@ -49,7 +49,6 @@ def view_user(user_id):
     db = get_db()
     cursor = db.cursor(dictionary=True)
 
-    # user
     cursor.execute("SELECT id, email, role FROM users WHERE id=%s", (user_id,))
     user = cursor.fetchone()
 
@@ -58,11 +57,9 @@ def view_user(user_id):
         db.close()
         return "Пользователь не найден", 404
 
-    # habits
     cursor.execute("SELECT * FROM habits WHERE user_id=%s", (user_id,))
     habits = cursor.fetchall()
 
-    # logs (ВСЕ отметки пользователя)
     cursor.execute("""
         SELECT habit_id, log_date 
         FROM habit_logs
@@ -76,12 +73,10 @@ def view_user(user_id):
     cursor.close()
     db.close()
 
-    # группируем отметки по привычкам
     logs_map = {}
     for log in logs:
         logs_map.setdefault(log["habit_id"], []).append(log["log_date"])
 
-    # мини-цели
     mini_goals = {}
     for h in habits:
         mini_goals[h["id"]] = MiniGoalService.get_for_today(h["id"])
