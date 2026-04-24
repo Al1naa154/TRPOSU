@@ -18,6 +18,15 @@ def init_db():
         )
     """)
 
+    # ------------------ Таблица иконок ------------------
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS icons (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            name VARCHAR(100),
+            file_path VARCHAR(255)
+        )
+    """)
+
     # ------------------ Таблица привычек ------------------
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS habits (
@@ -27,8 +36,9 @@ def init_db():
             tag VARCHAR(100),
             target_days INT DEFAULT 30,
             interval_days INT DEFAULT 1,
-            icon VARCHAR(100) DEFAULT 'star',
-            FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+            icon_id INT,
+            FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+            FOREIGN KEY (icon_id) REFERENCES icons(id) ON DELETE SET NULL
         )
     """)
 

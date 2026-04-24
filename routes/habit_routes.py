@@ -1,179 +1,145 @@
 from flask import Blueprint, render_template, request, redirect, url_for, session
 from db import get_db
+
 from models.habit import Habit
 from services.habit_service import HabitService
+from services.icon_service import IconService
 from services.mini_goal_service import MiniGoalService
-from flask import session, redirect, url_for, render_template
-
 
 habits = Blueprint("habits", __name__)
 
-ICON_LIST = [
-    "star", "favorite", "alarm", "pets", "work", "fitness_center",
-    "book", "lightbulb", "cake", "brush", "music_note", "sports_soccer",
-    "directions_run", "eco", "face", "emoji_events", "flight", "local_cafe",
-    "school", "shopping_cart", "spa", "check_circle", "bolt", "beach_access",
-    "home", "code", "restaurant", "camera_alt", "movie", "palette",
-    "directions_bike", "directions_car", "local_hospital",
-    "nature_people", "emoji_food_beverage"
-]
 
-@habits.route("/admin")
-def admin_panel():
-    if "user_id" not in session:
-        return redirect(url_for("auth.login"))
-
-    db = get_db()
-    cursor = db.cursor(dictionary=True)
-    cursor.execute("SELECT role FROM users WHERE id=%s", (session["user_id"],))
-    user = cursor.fetchone()
-    cursor.close()
-    db.close()
-
-    if not user or user["role"] != "admin":
-        return "Доступ запрещён", 403  # или редирект на главную
-
-    # Здесь логика панели администратора
-    return render_template("admin_panel.html")
-
-# ------------------ Главная ------------------
-
+# =========================
+# 📌 ГЛАВНАЯ СТРАНИЦА
+# =========================
 @habits.route("/")
 def index():
     if "user_id" not in session:
         return redirect(url_for("auth.login"))
 
     user_id = session["user_id"]
-    tag_filter = request.args.get("tag_filter", "")
 
     habits_list = HabitService.get_all(user_id)
-    tags = HabitService.get_tags(user_id)
+    icons = IconService.get_all()
 
-    if tag_filter:
-        habits_list = [h for h in habits_list if h[3] == tag_filter]
-
-    streaks = {h[0]: HabitService.calculate_streak(h[0]) for h in habits_list}
-
-    active = [h for h in habits_list if not HabitService.is_completed(h)]
-    completed = [h for h in habits_list if HabitService.is_completed(h)]
-
-    mini_goals = {
-        h[0]: MiniGoalService.get_for_today(h[0])
+    streaks = {
+        h["id"]: HabitService.calculate_streak(h["id"])
         for h in habits_list
     }
 
     day_map = {
-        h[0]: HabitService.get_day_statuses(h)
+        h["id"]: HabitService.get_day_statuses(h)
+        for h in habits_list
+    }
+
+    mini_goals = {
+        h["id"]: MiniGoalService.get_for_today(h["id"])
         for h in habits_list
     }
 
     return render_template(
         "index.html",
-        active_habits=active,
-        completed_habits=completed,
+        active_habits=habits_list,
         streaks=streaks,
-        tags=tags,
-        current_filter=tag_filter,
-        mini_goals=mini_goals,
+        icons=icons,
         day_map=day_map,
-        icons=ICON_LIST,
-        habit_icon="star"
+        mini_goals=mini_goals
     )
 
 
-# ------------------ Добавление привычки ------------------
-
+# =========================
+# ➕ ДОБАВИТЬ ПРИВЫЧКУ
+# =========================
 @habits.route("/add", methods=["POST"])
 def add():
     if "user_id" not in session:
         return redirect(url_for("auth.login"))
 
-    user_id = session["user_id"]
+    habit = Habit(
+        session["user_id"],
+        request.form["name"],
+        request.form.get("tag", ""),
+        request.form.get("target_days", 30),
+        request.form.get("interval_days", 1),
+        request.form.get("icon_id")
+    )
 
-    name = request.form["name"]
-    tag = request.form.get("tag", "")
-    target_days = int(request.form.get("target_days", 30))
-    interval_days = int(request.form.get("interval_days", 1))
-    icon = request.form.get("icon", "star")
-
-    habit = Habit(user_id, name, tag, target_days, interval_days, icon)
     habit.save()
-
     return redirect(url_for("habits.index"))
 
 
-# ------------------ Отметить выполнение ------------------
-
+# =========================
+# ✔ ОТМЕТИТЬ ДЕНЬ
+# =========================
 @habits.route("/log/<int:habit_id>")
 def log(habit_id):
-    if "user_id" not in session:
-        return redirect(url_for("auth.login"))
-
     HabitService.log_today(habit_id)
     return redirect(url_for("habits.index"))
 
 
-# ------------------ Удаление ------------------
-
+# =========================
+# 🗑 УДАЛИТЬ ПРИВЫЧКУ
+# =========================
 @habits.route("/delete/<int:habit_id>")
 def delete(habit_id):
-    if "user_id" not in session:
-        return redirect(url_for("auth.login"))
-
     HabitService.delete(habit_id)
     return redirect(url_for("habits.index"))
 
 
-# ------------------ Редактирование ------------------
-
+# =========================
+# ✏ РЕДАКТИРОВАНИЕ ПРИВЫЧКИ
+# =========================
 @habits.route("/edit/<int:habit_id>", methods=["GET", "POST"])
 def edit(habit_id):
     if "user_id" not in session:
         return redirect(url_for("auth.login"))
 
     db = get_db()
-    cursor = db.cursor()
-    cursor.execute("SELECT * FROM habits WHERE id = %s", (habit_id,))
-    habit = cursor.fetchone()
-    cursor.close()
-    db.close()
+    cursor = db.cursor(dictionary=True)
 
-    if not habit:
-        return redirect(url_for("habits.index"))
+    # GET — открыть форму
+    if request.method == "GET":
+        cursor.execute("SELECT * FROM habits WHERE id=%s", (habit_id,))
+        habit = cursor.fetchone()
 
-    if request.method == "POST":
-        name = request.form["name"]
-        tag = request.form.get("tag", "")
-        target_days = int(request.form.get("target_days", 30))
-        interval_days = int(request.form.get("interval_days", 1))
-        icon = request.form.get("icon", habit[6])
+        cursor.execute("SELECT id, file_path FROM icons")
+        icons = cursor.fetchall()
 
-        db = get_db()
-        cursor = db.cursor()
-        cursor.execute(
-            """
-            UPDATE habits 
-            SET name = %s, tag = %s, target_days = %s, 
-                interval_days = %s, icon = %s 
-            WHERE id = %s
-            """,
-            (name, tag, target_days, interval_days, icon, habit_id)
-        )
-        db.commit()
         cursor.close()
         db.close()
 
-        return redirect(url_for("habits.index"))
+        if not habit:
+            return "Привычка не найдена", 404
 
-    return render_template(
-        "edit.html",
-        habit=habit,
-        icons=ICON_LIST,
-        habit_icon=habit[6]
-    )
+        return render_template("edit_habit.html", habit=habit, icons=icons)
+
+    # POST — сохранить изменения
+    name = request.form["name"]
+    tag = request.form.get("tag", "")
+    target_days = request.form.get("target_days", 30)
+    interval_days = request.form.get("interval_days", 1)
+    icon_id = request.form.get("icon_id")
+
+    cursor.execute("""
+        UPDATE habits
+        SET name=%s,
+            tag=%s,
+            target_days=%s,
+            interval_days=%s,
+            icon_id=%s
+        WHERE id=%s
+    """, (name, tag, target_days, interval_days, icon_id, habit_id))
+
+    db.commit()
+    cursor.close()
+    db.close()
+
+    return redirect(url_for("habits.index"))
 
 
-# ------------------ Мини-цели ------------------
+# =========================
+# 🔥 MINI GOALS
+# =========================
 
 @habits.route("/mini_goal/add/<int:habit_id>", methods=["POST"])
 def add_mini_goal(habit_id):
@@ -188,17 +154,11 @@ def add_mini_goal(habit_id):
 
 @habits.route("/mini_goal/toggle/<int:goal_id>")
 def toggle_mini_goal(goal_id):
-    if "user_id" not in session:
-        return redirect(url_for("auth.login"))
-
     MiniGoalService.toggle(goal_id)
     return redirect(url_for("habits.index"))
 
 
 @habits.route("/mini_goal/delete/<int:goal_id>")
 def delete_mini_goal(goal_id):
-    if "user_id" not in session:
-        return redirect(url_for("auth.login"))
-
     MiniGoalService.delete(goal_id)
     return redirect(url_for("habits.index"))

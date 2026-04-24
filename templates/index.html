@@ -1,218 +1,296 @@
 <!doctype html>
 <html lang="ru">
 <head>
-<link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
 <meta charset="UTF-8">
 <title>Трекер привычек</title>
+
 <style>
+body {
+    font-family: Arial, sans-serif;
+    background: #f4f6f8;
+    margin: 0;
+    padding: 0;
+}
 
+.container {
+    max-width: 900px;
+    margin: 40px auto;
+    background: white;
+    padding: 30px;
+    border-radius: 12px;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.08);
+}
 
+h1, h2 {
+    text-align: center;
+    color: #2c3e50;
+}
 
+form {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-bottom: 20px;
+}
+
+input, button, select {
+    padding: 8px 12px;
+    border-radius: 6px;
+    border: 1px solid #ccc;
+}
+
+button {
+    background: #3498db;
+    color: white;
+    border: none;
+    cursor: pointer;
+}
+
+button:hover {
+    background: #2980b9;
+}
+
+ul {
+    list-style: none;
+    padding: 0;
+}
+
+li {
+    background: #fafafa;
+    margin-bottom: 12px;
+    padding: 15px;
+    border-radius: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.logout {
+    float: right;
+    margin-top: -30px;
+    color: red;
+    text-decoration: none;
+}
+
+/* прогресс */
+.progress-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+progress {
+    width: 100%;
+    height: 16px;
+}
+
+/* дни */
 .day-grid {
     display: grid;
     grid-template-columns: repeat(30, 16px);
     gap: 6px;
-    margin-top: 10px;
-    justify-content: start;
 }
 
 .day {
     width: 16px;
     height: 16px;
     border-radius: 4px;
-    cursor: pointer;
     border: 1px solid #dcdde1;
 }
 
-/* Будущие дни */
-.day.future {
-    background: #ecf0f1;
-}
+.day.future { background: #ecf0f1; }
+.day.done { background: #2ecc71; }
+.day.missed { background: #e74c3c; }
 
-/* Выполнено */
-.day.done {
-    background: #2ecc71;
-}
-
-/* Пропущено */
-.day.missed {
-    background: #e74c3c;
-}
-.mini-goals { margin-top: 10px; }
-.mini-goal {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    font-size: 14px;
-}
-.circle {
-    width: 14px;
-    height: 14px;
-    border-radius: 50%;
-    border: 2px solid #3498db;
-    display: inline-block;
-}
-.done .circle {
-    background: #bdc3c7;
-    border-color: #bdc3c7;
-}
-.done span {
-    text-decoration: line-through;
-    color: #95a5a6;
-}
-.mini-goal a {
-    text-decoration: none;
-}
-body { font-family: Arial, sans-serif; background: #f4f6f8; margin: 0; padding: 0; }
-.container { max-width: 900px; margin: 40px auto; background: white; padding: 30px; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.08); }
-h1 { text-align: center; color: #2c3e50; } h2 { color: #34495e; margin-top: 30px; }
-form { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 20px; }
-input, button, select { padding: 8px 12px; border-radius: 6px; border: 1px solid #ccc; }
-button { background: #3498db; color: white; border: none; cursor: pointer; }
-button:hover { background: #2980b9; }
-ul { list-style: none; padding: 0; }
-li { background: #fafafa; margin-bottom: 12px; padding: 15px; border-radius: 8px; display: flex; flex-direction: column; gap: 8px; }
-.progress-row { display: flex; align-items: center; gap: 10px; }
-progress { width: 100%; height: 16px; }
-.actions a { margin-right: 10px; text-decoration: none; font-size: 14px; }
-.actions a.done { color: #27ae60; }
-.actions a.delete { color: #e74c3c; }
-.actions a.edit { color: #f39c12; }
-.completed li { background: #eafaf1; border-left: 5px solid #2ecc71; }
-.logout { float: right; margin-top: -30px; }
-</style>
-</head>
-<body>
-<div class="container">
-<h1>Трекер привычек</h1>
-{% if session.role == "admin" and session.view_user %}
-<div style="background:#fff3cd;padding:10px;border-radius:6px;margin-bottom:15px;">
-Вы просматриваете аккаунт пользователя.
-<a href="/admin/exit_view">Вернуться в админку</a>
-</div>
-{% endif %}
-<a class="logout" href="/logout">Выйти</a>
-{% if session.role == "admin" %}
-<a href="/admin/users" style="margin-left:20px;">Админ панель</a>
-{% endif %}
-
-<h2>Добавить привычку</h2>
-<form method="post" action="/add">
-    <input name="name" placeholder="Название" required>
-    <input name="tag" placeholder="Тег">
-    <input name="target_days" type="number" value="30" min="1" placeholder="Количество отметок">
-    <input name="interval_days" type="number" value="1" min="1" placeholder="Шаг в днях">
-
-    <label>Выберите иконку:</label>
-<div class="icon-grid">
-{% for ic in icons %}
-<label class="icon-label">
-    <input type="radio" name="icon" value="{{ ic }}" {% if ic=='star' or ic==habit_icon %}checked{% endif %} style="display:none;">
-    <span class="material-icons icon-item" onclick="selectIcon(this)">{{ ic }}</span>
-</label>
-{% endfor %}
-</div>
-
-<style>
+/* иконки */
 .icon-grid {
     display: flex;
     flex-wrap: wrap;
     gap: 10px;
-    margin-bottom: 10px;
 }
-.icon-label { text-align: center; cursor: pointer; }
+
 .icon-item {
-    font-size: 32px;
+    width: 40px;
+    height: 40px;
     border: 2px solid #ccc;
     border-radius: 8px;
-    padding: 4px;
-    transition: 0.2s;
+    cursor: pointer;
 }
-.icon-item:hover { border-color: #3498db; }
-.icon-item.selected { border-color: #2980b9; background: #ecf0f1; }
+
+.icon-item.selected {
+    border-color: #2980b9;
+    background: #ecf0f1;
+}
+
+/* действия */
+.actions a {
+    margin-right: 10px;
+    text-decoration: none;
+}
+
+.actions a.done { color: green; }
+.actions a.edit { color: orange; }
+.actions a.delete { color: red; }
+
+/* мини-цели */
+.mini-goals {
+    margin-top: 10px;
+    padding-top: 10px;
+    border-top: 1px dashed #ccc;
+}
+
+.mini-goals ul {
+    margin-top: 5px;
+}
+
+.mini-goals li {
+    padding: 5px;
+    margin: 3px 0;
+    background: #fff;
+    border: 1px solid #eee;
+    border-radius: 6px;
+}
 </style>
 
 <script>
 function selectIcon(el) {
-    // Убираем подсветку у всех иконок в этой форме
-    let siblings = el.closest('.icon-grid').querySelectorAll('.icon-item');
-    siblings.forEach(s => s.classList.remove('selected'));
-    // Подсвечиваем выбранную
+    let parent = el.closest('.icon-grid');
+    parent.querySelectorAll('.icon-item')
+        .forEach(i => i.classList.remove('selected'));
+
     el.classList.add('selected');
-    // Отмечаем radio
     el.previousElementSibling.checked = true;
 }
 </script>
+
+</head>
+
+<body>
+
+<div class="container">
+
+<h1>Трекер привычек</h1>
+
+<a class="logout" href="/logout">Выйти</a>
+
+{% if session.get('role') == 'admin' %}
+    <a href="/admin/users">Админ панель</a>
+{% endif %}
+
+<h2>Добавить привычку</h2>
+
+<form method="post" action="/add">
+    <input name="name" placeholder="Название" required>
+    <input name="tag" placeholder="Тег">
+    <input name="target_days" type="number" value="30">
+    <input name="interval_days" type="number" value="1">
+
+    <div class="icon-grid">
+    {% for ic in icons %}
+        <label>
+            <input type="radio" name="icon_id" value="{{ ic.id }}" hidden>
+
+            <img src="{{ url_for('static', filename=ic.file_path) }}"
+                 class="icon-item"
+                 onclick="selectIcon(this)">
+        </label>
+    {% endfor %}
+    </div>
+
     <button>Добавить</button>
 </form>
 
-
-<h2>Фильтр по тегу</h2>
-<form method="get" action="/">
-    <select name="tag_filter">
-        <option value="">Все теги</option>
-        {% for t in tags %}
-            <option value="{{ t }}" {% if current_filter == t %}selected{% endif %}>{{ t }}</option>
-        {% endfor %}
-    </select>
-    <button>Применить фильтр</button>
-</form>
-
 <h2>Активные привычки</h2>
+
 <ul>
+
 {% for h in active_habits %}
 <li>
-    <strong>
-        <span class="material-icons" style="vertical-align:middle; font-size:20px;">{{ h[6] }}</span>
-        {{ h[2] }}
-    </strong>
-    <small>({{ h[3] }})</small>
+
+    <!-- ИКОНКА + НАЗВАНИЕ -->
+    <div>
+        {% if h.file_path %}
+            <img src="{{ url_for('static', filename=h.file_path) }}" width="22">
+        {% else %}
+            <img src="{{ url_for('static', filename='icons/default.png') }}" width="22">
+        {% endif %}
+
+        <b>{{ h.name }}</b> ({{ h.tag }})
+    </div>
+
+    <!-- ПРОГРЕСС -->
     <div class="progress-row">
+        {{ streaks[h.id] }} / {{ h.target_days }}
+        <progress value="{{ streaks[h.id] }}" max="{{ h.target_days }}"></progress>
+    </div>
+
+    <!-- ДНИ -->
     <div class="day-grid">
-    {% for d in day_map[h[0]] %}
-        <div class="day {{ d.status }}" title="{{ d.date }}"></div>
-    {% endfor %}
-</div>
-        {{ streaks[h[0]] }} / {{ h[4] }} отметок
-        <progress value="{{ streaks[h[0]] }}" max="{{ h[4] }}"></progress>
+        {% for d in day_map[h.id] %}
+            <div class="day {{ d.status }}" title="{{ d.date }}"></div>
+        {% endfor %}
     </div>
+
+    <!-- ДЕЙСТВИЯ -->
     <div class="actions">
+        <a class="done" href="/log/{{ h.id }}">✔</a>
+        <a class="edit" href="/edit/{{ h.id }}">✏</a>
+        <a class="delete" href="/delete/{{ h.id }}">🗑</a>
+    </div>
+
+    <!-- 🔥 МИНИ-ЦЕЛИ -->
     <div class="mini-goals">
-    {% for g in mini_goals[h[0]] %}
-    <div class="mini-goal {% if g[2] %}done{% endif %}">
-        <a href="/mini_goal/toggle/{{ g[0] }}">
-            <div class="circle"></div>
-        </a>
-        <span>{{ g[1] }}</span>
-        <a href="/mini_goal/delete/{{ g[0] }}">🗑</a>
-    </div>
-    {% endfor %}
 
-    <form method="post" action="/mini_goal/add/{{ h[0] }}">
-        <input name="title" placeholder="Мини-цель на сегодня" required>
-        <button>+</button>
+    <b>Мини-цели:</b>
+
+    <!-- добавить -->
+    <form method="post" action="/mini_goal/add/{{ h.id }}">
+        <input name="title" placeholder="Новая мини-цель">
+        <button>Добавить</button>
     </form>
+
+    {% if mini_goals.get(h.id) %}
+        <ul>
+
+        {% for g in mini_goals[h.id] %}
+            <li style="display:flex; justify-content:space-between; align-items:center;">
+
+                <!-- ЧЕКБОКС -->
+                <div>
+                    <form method="get" action="/mini_goal/toggle/{{ g.id }}" style="display:inline;">
+                        <input type="checkbox"
+                               onchange="this.form.submit()"
+                               {% if g.is_done %}checked{% endif %}>
+                    </form>
+
+                    <span style="{% if g.is_done %}text-decoration: line-through; color: #888;{% endif %}">
+                        {{ g.title }}
+                    </span>
+                </div>
+
+                <!-- УДАЛЕНИЕ -->
+                <a href="/mini_goal/delete/{{ g.id }}"
+                   onclick="return confirm('Удалить мини-цель?')"
+                   style="color:red; text-decoration:none;">
+                    🗑
+                </a>
+
+            </li>
+        {% endfor %}
+
+        </ul>
+    {% else %}
+        <p>Нет мини-целей</p>
+    {% endif %}
+
 </div>
-{% if not session.view_user %}
-<a class="done" href="/log/{{ h[0] }}">✔ Выполнено сегодня</a>
-<a class="edit" href="/edit/{{ h[0] }}">✏ Редактировать</a>
-<a class="delete" href="/delete/{{ h[0] }}">🗑 Удалить</a>
-{% endif %}
-    </div>
+
 </li>
 {% endfor %}
-</ul>
 
-<h2>Завершённые привычки 🎉</h2>
-<ul class="completed">
-{% for h in completed_habits %}
-<li>
-    <strong>{{ h[2] }}</strong> <small>({{ h[3] }})</small><br>
-    Цель {{ h[4] }} дней выполнена ✔
-</li>
-{% endfor %}
 </ul>
 
 </div>
+
 </body>
 </html>

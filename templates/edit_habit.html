@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<title>Редактировать привычку</title>
+
+<style>
+body { font-family: Arial; background: #f4f6f8; }
+.container {
+    max-width: 600px;
+    margin: 50px auto;
+    background: white;
+    padding: 30px;
+    border-radius: 12px;
+}
+
+.icon-grid { display: flex; gap: 10px; flex-wrap: wrap; }
+
+.icon-item {
+    width: 40px;
+    height: 40px;
+    border: 2px solid #ccc;
+    border-radius: 8px;
+    cursor: pointer;
+}
+
+.icon-item.selected {
+    border-color: #2980b9;
+}
+</style>
+
+<script>
+function selectIcon(el) {
+    el.closest('.icon-grid')
+      .querySelectorAll('.icon-item')
+      .forEach(i => i.classList.remove('selected'));
+
+    el.classList.add('selected');
+    el.previousElementSibling.checked = true;
+}
+</script>
+
+</head>
+
+<body>
+<div class="container">
+
+<h2>Редактировать привычку</h2>
+
+<form method="post">
+
+<input name="name" value="{{ habit.name }}">
+<input name="tag" value="{{ habit.tag }}">
+<input name="target_days" value="{{ habit.target_days }}">
+<input name="interval_days" value="{{ habit.interval_days }}">
+
+<div class="icon-grid">
+{% for ic in icons %}
+<label>
+    <input type="radio" name="icon_id" value="{{ ic.id }}" hidden
+        {% if ic.id == habit.icon_id %}checked{% endif %}>
+
+    <img src="{{ url_for('static', filename=ic.file_path) }}"
+         class="icon-item"
+         onclick="selectIcon(this)">
+</label>
+{% endfor %}
+</div>
+
+<button>Сохранить</button>
+
+</form>
+
+</div>
+</body>
+</html>

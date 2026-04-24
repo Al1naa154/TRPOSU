@@ -1,3 +1,4 @@
+print("🔥 APP FILE:", __file__)
 from flask import Flask
 from config import SECRET_KEY
 from db import init_db
